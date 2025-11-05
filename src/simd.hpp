@@ -110,6 +110,7 @@ namespace ASC_HPC
       m_lo.store(ptr, mask.lo());
       m_hi.store(ptr+S1, mask.hi());
     }
+
   };
 
 
@@ -240,9 +241,22 @@ namespace ASC_HPC
   auto operator>= (TA a, const SIMD<T,S> & b)
   { return SIMD<T,S>(a) >= b; }
   
+
+  
+/*        // ***************************** transpose 4x4 ********************************
+
+void transpose (SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<double,4> a3,
+                SIMD<double,4> &b0, SIMD<double,4> &b1, SIMD<double,4> &b2, SIMD<double,4> &b3){
+
+(*b0) = SIMD<double,4>(a0[0], a1[0], a2[0], a3[0]);
+ *b0 = SIMD<double,4>(a0[1], a1[1], a2[1], a3[1]);
+*b0 = SIMD<double,4>(a0[2], a1[2], a2[2], a3[2]);
+*b0 = SIMD<double,4>(a0[3], a1[3], a2[3], a3[3]);
+ 
+
+
+             } */
 }
-  
-  
 #ifdef __AVX__
 #include "simd_avx.hpp"
 #endif

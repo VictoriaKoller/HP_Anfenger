@@ -175,6 +175,36 @@ namespace ASC_HPC
 
   
   
+
+
+
+// Transpose function: takes 4 rows as input, writes 4 columns as output
+  inline void transpose(SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<double,4> a3,
+                        SIMD<double,4> &b0, SIMD<double,4> &b1, SIMD<double,4> &b2, SIMD<double,4> &b3)
+  {
+    __m256d r0 = a0.val();
+    __m256d r1 = a1.val();
+    __m256d r2 = a2.val();
+    __m256d r3 = a3.val();
+
+    // unpack/shuffle within 128-bit lanes
+    __m256d t0 = _mm256_unpacklo_pd(r0, r1); // a0[0], a1[0], a0[2], a1[2]
+    __m256d t1 = _mm256_unpackhi_pd(r0, r1); // a0[1], a1[1], a0[3], a1[3]
+    __m256d t2 = _mm256_unpacklo_pd(r2, r3);
+    __m256d t3 = _mm256_unpackhi_pd(r2, r3);
+
+    // combine low/high 128-bit lanes to form columns
+    __m256d c0 = _mm256_permute2f128_pd(t0, t2, 0x20); // low halves
+    __m256d c1 = _mm256_permute2f128_pd(t1, t3, 0x20);
+    __m256d c2 = _mm256_permute2f128_pd(t0, t2, 0x31); // high halves
+    __m256d c3 = _mm256_permute2f128_pd(t1, t3, 0x31);
+
+    b0 = SIMD<double,4>(c0);
+    b1 = SIMD<double,4>(c1);
+    b2 = SIMD<double,4>(c2);
+    b3 = SIMD<double,4>(c3);
+
+  }
 }
 
 
