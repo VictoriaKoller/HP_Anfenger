@@ -13,6 +13,27 @@
 namespace ASC_HPC
 {
 
+
+   template<>
+  class SIMD<mask64,2>
+  {
+    __m128i m_mask;
+  public:
+
+    SIMD (__m128i mask) : m_mask(mask) { };
+    SIMD (__m128d mask) : m_mask(_mm_castpd_si128 (mask)) { ; }
+    auto val() const { return m_mask; }
+    mask64 operator[](size_t i) const { return ( (int64_t*)&m_mask)[i] != 0; }
+    
+    SIMD<mask64, 1> lo() const { return SIMD<mask64,1>((*this)[0]); }
+    SIMD<mask64, 1> hi() const { return SIMD<mask64,1>((*this)[1]); }
+    SIMD(double v0, double v1)
+    {(*this)[0] = v0; 
+      (*this)[1] = v1;
+    } 
+  };
+ 
+
   template<>
   class SIMD<mask64,4>
   {
@@ -28,6 +49,39 @@ namespace ASC_HPC
     SIMD<mask64, 2> hi() const { return SIMD<mask64,2>((*this)[2], (*this)[3]); }
   };
 
+
+
+
+   template<>
+ class SIMD<double,2>
+  {
+    __m128d m_val;
+  public:
+    SIMD () = default;
+    SIMD (const SIMD &) = default;
+    SIMD(double val) : m_val{_mm_set1_pd(val)} {};
+    SIMD(__m128d val) : m_val{val} {};
+    SIMD (double v0, double v1) : m_val{_mm_set_pd(v1,v0)} {  }
+    SIMD (SIMD<double,1> v0, SIMD<double,1> v1) :  m_val{_mm_set_pd(v1[0],v0[0])} { }  
+    SIMD (std::array<double,4> a) : SIMD(a[0],a[1]) { }
+    SIMD (double const * p) { m_val = _mm_loadu_pd(p); }
+    SIMD (double const * p, SIMD<mask64,2> mask) { m_val = _mm_maskload_pd(p, mask.val()); }
+    
+    static constexpr int size() { return 2; }
+    auto val() const { return m_val; }
+    const double * ptr() const { return (double*)&m_val; }
+    SIMD<double, 1> lo() const { return SIMD<double,1>((*this)[0]); }
+    SIMD<double, 1> hi() const { return SIMD<double,1>((*this)[1]); }
+
+    // better:
+    // SIMD<double, 2> lo() const { return _mm256_extractf128_pd(m_val, 0); }
+    // SIMD<double, 2> hi() const { return _mm256_extractf128_pd(m_val, 1); }
+    double operator[](size_t i) const { return ((double*)&m_val)[i]; }
+
+    void store (double * p) const { _mm_storeu_pd(p, m_val); }
+   // void store (double * p, SIMD<mask64,2> mask) const { _mm256_maskstore_pd(p, mask.val(), m_val); }
+  };
+   
 
   
   template<>
@@ -60,6 +114,7 @@ namespace ASC_HPC
     void store (double * p, SIMD<mask64,4> mask) const { _mm256_maskstore_pd(p, mask.val(), m_val); }
   };
   
+
 
 
   
@@ -119,6 +174,14 @@ namespace ASC_HPC
   
 
   
+  
 }
 
+
+
 #endif
+
+
+
+
+              

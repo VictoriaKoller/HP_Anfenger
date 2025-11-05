@@ -52,7 +52,10 @@ int main()
   
   cout << "a = " << a << endl;
   cout << "b = " << b << endl;
+  cout << "a*b = " << a*b << endl;
   cout << "a+b = " << a+b << endl;
+
+
 
   cout << "HSum(a) = " << hSum(a) << endl;
   cout << "HSum(a,b) = " << hSum(a,b) << endl;
