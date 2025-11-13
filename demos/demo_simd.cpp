@@ -1,11 +1,12 @@
 #include <iostream>
 #include <sstream>
 
-
 #include <simd.hpp>
 #include<math.h>
 
-//#define M_PI 3.14159265358979323846;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 using namespace ASC_HPC;
 using std::cout, std::endl;
@@ -76,6 +77,7 @@ int main()
   cout << M_PI;
 
 //skalar
+/*
   {
     double angle = M_PI/4;
     auto [s, c] = sincos(angle);
@@ -83,7 +85,7 @@ int main()
     cout << "angle = " << angle << endl;
     cout << "sin(angle) = " << s << endl;
     cout << "cos(angle) = " << c << endl;
-  }
+  }*/
 
 //simd
 /*
