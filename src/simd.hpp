@@ -41,10 +41,14 @@ namespace ASC_HPC
       : m_mask{ b ? -1 : 0 } { }
     auto val() const { return m_mask; }
     operator bool() { return bool(m_mask); }
+
+    //bool toBool() const { return m_mask != 0; }
+
   };
   
   inline std::ostream & operator<< (std::ostream & ost, mask64 m)
   {
+    //ost << (m.toBool() ? 't' : 'f');
     ost << (m ? 't' : 'f');
     return ost;
   }
@@ -142,9 +146,9 @@ namespace ASC_HPC
     void store (T * ptr, SIMD<mask64,1> mask) const { if (mask.val()) *ptr = m_val; }
   };
 
-
+/*
   template <typename T, size_t S>  
-  std::ostream & operator<< (std::ostream & ost, SIMD<T,S> simd)
+  std::ostream & operator<< (std::ostream & ost, const SIMD<T,S>& simd)
   {
     if (S>1){
     for (size_t i = 0; i < S-1; i++)
@@ -154,6 +158,18 @@ namespace ASC_HPC
     }
     else{
       ost << simd[0];
+      return ost;
+    }
+  }*/
+
+  template <typename T, size_t S>  
+  std::ostream & operator<< (std::ostream & ost, const SIMD<T,S>& simd)
+  {
+    for (size_t i = 0; i < S; i++){
+      ost << simd[i];
+      if (i+1 < S) 
+        ost << ", ";
+    return ost;
     }
   }
 
@@ -266,7 +282,9 @@ void transpose (SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<do
 
              } */
 
-  template <int N>
+
+// *************** sincos ********************
+template <int N>
 inline SIMD<double, N> simd_round(const SIMD<double, N>& x) {
   SIMD<double, N> result;
   for (int i = 0; i < N; ++i)
@@ -280,6 +298,18 @@ inline SIMD<int64_t, N> simd_lround(const SIMD<double, N>& x) {
   for (int i=0; i<N; ++i)
     result[i] = std::lround(x[i]);
   return result;
+}
+
+template <int N>
+auto simd_sincos_reduced(const ASC_HPC::SIMD<double,N>& x)
+{
+    ASC_HPC::SIMD<double,N> s, c;
+    for (int i = 0; i < N; ++i) {
+        auto [si, ci] = ASC_HPC::sincos_reduced(x[i]);
+        s[i] = si;
+        c[i] = ci;
+    }
+    return std::tuple{s, c};
 }
          
 
@@ -337,10 +367,11 @@ auto sincos (double x)
 template <int N>
 auto sincos (SIMD<double,N> x)
 {
-  SIMD<double,N> y = round((2/M_PI) * x);
-  SIMD<int64_t,N> q = lround(y);
+
+  SIMD<double,N> y = simd_round((2/M_PI) * x);
+  SIMD<int64_t,N> q = simd_lround(y);
   
-  auto [s1,c1] = sincos_reduced(x - y * (M_PI/2)); 
+  auto [s1,c1] = simd_sincos_reduced(x - y * (M_PI/2)); 
 
   auto s2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), s1,  c1);
   auto s  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), s2, -s2);

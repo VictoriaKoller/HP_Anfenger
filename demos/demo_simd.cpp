@@ -10,6 +10,8 @@
 
 using namespace ASC_HPC;
 using std::cout, std::endl;
+using ASC_HPC::operator<<;
+
 
 auto func1 (SIMD<double> a, SIMD<double> b)
 {
@@ -77,7 +79,7 @@ int main()
   cout << M_PI;
 
 //skalar
-/*
+
   {
     double angle = M_PI/4;
     auto [s, c] = sincos(angle);
@@ -85,16 +87,17 @@ int main()
     cout << "angle = " << angle << endl;
     cout << "sin(angle) = " << s << endl;
     cout << "cos(angle) = " << c << endl;
-  }*/
+  }
 
-//simd
-/*
+//simd 
+
   {
     SIMD<double,4> angles(0.0, M_PI/2., M_PI, 3.0*M_PI/2.);
-    auto [s, c] = sincos(angles);
-    cout << "Test sincos(SIMD<double,4>):" << endl;
-    cout << "angles = " << angles << endl;
-    cout << "sin(angles) = " << s << endl;
-    cout << "cos(angles) = " << c << endl;
-  }*/
+    //auto [s, c] = sincos(angles);
+    //cout << "Test sincos(SIMD<double,4>):" << endl;
+    //cout << "angles = " << angles << endl;
+    //cout << "sin(angles) = " << s << endl;
+    //cout << "cos(angles) = " << c << endl;
+  }
+   
 }
