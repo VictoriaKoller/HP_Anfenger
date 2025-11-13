@@ -169,8 +169,8 @@ namespace ASC_HPC
       ost << simd[i];
       if (i+1 < S) 
         ost << ", ";
-    return ost;
     }
+    return ost;
   }
 
   // ********************** Arithmetic operations ********************************
@@ -265,6 +265,40 @@ namespace ASC_HPC
   template <typename TA, typename T, size_t S>
   auto operator>= (TA a, const SIMD<T,S> & b)
   { return SIMD<T,S>(a) >= b; }
+
+
+
+  // Bitweises AND für SIMD<int64_t, N>
+template <size_t N>
+inline SIMD<int64_t, N> operator&(const SIMD<int64_t, N>& a, const SIMD<int64_t, N>& b) {
+    SIMD<int64_t, N> result;
+    for (size_t i = 0; i < N; ++i) result[i] = a[i] & b[i];
+    return result;
+}
+
+inline SIMD<int64_t, 1> operator&(const SIMD<int64_t, 1>& a, const SIMD<int64_t, 1>& b) {
+    return SIMD<int64_t, 1>(a[0] & b[0]);
+}
+
+// Vergleichsoperator == für SIMD<int64_t, N> mit SIMD<int64_t, N>
+template <size_t N>
+inline SIMD<mask64, N> operator==(const SIMD<int64_t, N>& a, const SIMD<int64_t, N>& b) {
+    SIMD<mask64, N> result;
+    for (size_t i = 0; i < N; ++i) result[i] = (a[i] == b[i]);
+    return result;
+}
+
+// Vergleichsoperator == für SIMD<int64_t, N> mit Skalar
+template <size_t N>
+inline SIMD<mask64, N> operator==(const SIMD<int64_t, N>& a, int64_t b) {
+    SIMD<mask64, N> result;
+    for (size_t i = 0; i < N; ++i) result[i] = (a[i] == b);
+    return result;
+}
+
+inline SIMD<mask64, 1> operator==(const SIMD<int64_t, 1>& a, int64_t b) {
+    return SIMD<mask64, 1>(a[0] == b);
+}
   
 
   
