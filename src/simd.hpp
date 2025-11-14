@@ -110,6 +110,7 @@ namespace ASC_HPC
       m_lo.store(ptr, mask.lo());
       m_hi.store(ptr+S1, mask.hi());
     }
+
   };
 
 
@@ -242,8 +243,6 @@ namespace ASC_HPC
 
 
 }
-  
-  
 #ifdef __AVX__
 #include "simd_avx.hpp"
 #endif
