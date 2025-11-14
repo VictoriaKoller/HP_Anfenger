@@ -70,5 +70,35 @@ int main()
   }
 
   cout << "select(mask, a, b) = " << select(mask, a,b) << endl;
+
+  cout << "\n--- Testing SIMD<double,2> ---" << endl;
+  SIMD<double,2> x(5.0, 7.0);
+  SIMD<double,2> y(2.0, 3.0);
+  cout << "x = " << x << endl;
+  cout << "y = " << y << endl;
+  cout << "x+y = " << x+y << endl;
+  cout << "x*y = " << x*y << endl;
+  
+  // Test splitting SIMD<double,4> into two SIMD<double,2>
+  cout << "\n--- Splitting SIMD<double,4> ---" << endl;
+  cout << "a.lo() = " << a.lo() << endl;
+  cout << "a.hi() = " << a.hi() << endl;
+  
+  // Test combining two SIMD<double,2> into SIMD<double,4>
+  cout << "\n--- Combining SIMD<double,2> to SIMD<double,4> ---" << endl;
+  SIMD<double,4> combined(x, y);
+  cout << "SIMD<double,4>(x, y) = " << combined << endl;
+
+  // Test bitonic sort
+  cout << "\n--- Bitonic Sort ---" << endl;
+  SIMD<double,4> unsorted(4.0, 2.0, 3.0, 1.0);
+  cout << "Unsorted: " << unsorted << endl;
+  SIMD<double,4> sorted = bitonic_sort(unsorted);
+  cout << "Sorted:   " << sorted << endl;
+  
+  SIMD<double,2> unsorted2(7.0, 5.0);
+  cout << "Unsorted SIMD<double,2>: " << unsorted2 << endl;
+  SIMD<double,2> sorted2 = bitonic_sort(unsorted2);
+  cout << "Sorted SIMD<double,2>:   " << sorted2 << endl;
   
 }
