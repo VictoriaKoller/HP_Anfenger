@@ -1,0 +1,6 @@
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/demo_tasks.dir
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/demo_simd.dir
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/simd_timings.dir
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/timing_mem.dir
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/ansch/OneDrive/Dokumente/Uni/SciComp/HP_Anfenger/build/CMakeFiles/ZERO_CHECK.dir
