@@ -107,7 +107,12 @@ namespace ASC_HPC
     auto & hi() { return m_hi; }
 
     const T * ptr() const { return m_lo.ptr(); }
+    T * ptr() { return m_lo.ptr(); }          
+
+
     T operator[] (size_t i) const { return ptr()[i]; }
+    T & operator[] (size_t i) { return ptr()[i]; }   // NEU
+
 
     void store (T * ptr) const {
       m_lo.store(ptr);
@@ -140,7 +145,11 @@ namespace ASC_HPC
 
     static constexpr size_t size() { return 1; }
     const T * ptr() const { return &m_val; }    
+    T * ptr() { return &m_val; }             
+
     T operator[] (size_t i) const { return m_val; }
+    T & operator[] (size_t i) { return m_val; }     
+
 
     void store (T * ptr) const { *ptr = m_val; }
     void store (T * ptr, SIMD<mask64,1> mask) const { if (mask.val()) *ptr = m_val; }
@@ -194,6 +203,39 @@ namespace ASC_HPC
   template <typename T, size_t S>
   auto operator+= (SIMD<T,S> & a, SIMD<T,S> b) { a = a+b; return a; }
   
+  // ********************** Subtraktion ********************************
+
+  template <typename T, size_t S>
+  auto operator- (SIMD<T,S> a, SIMD<T,S> b)
+  { return SIMD<T,S> (a.lo() - b.lo(), a.hi() - b.hi()); }
+
+  template <typename T>
+  auto operator- (SIMD<T,1> a, SIMD<T,1> b)
+  { return SIMD<T,1> (a.val() - b.val()); }
+
+    // unäres Minus
+  template <typename T, size_t S>
+  inline SIMD<T,S> operator-(SIMD<T,S> a) {
+    return SIMD<T,S>(-a.lo(), -a.hi());
+  }
+
+  template <typename T>
+  inline SIMD<T,1> operator-(SIMD<T,1> a) {
+    return SIMD<T,1>(-a.val());
+  }
+
+
+  // ********************** Skalarmultiplikation (Skalar rechts) ********************************
+
+  template <typename T, size_t S>
+  auto operator* (SIMD<T,S> a, double b)
+  { return SIMD<T,S> (a.lo() * b, a.hi() * b); }
+
+  template <typename T>
+  auto operator* (SIMD<T,1> a, double b)
+  { return SIMD<T,1> (a.val() * b); }
+
+
   template <typename T, size_t S>
   auto fma(SIMD<T,S> a, SIMD<T,S> b, SIMD<T,S> c)
   { return SIMD<T,S> (fma(a.lo(),b.lo(),c.lo()), fma(a.hi(),b.hi(),c.hi())); }    
@@ -253,7 +295,8 @@ namespace ASC_HPC
     IndexSequence() : SIMD<T,1> (first) { }
   };
 
-
+  //operators 
+  
   template <typename T, size_t S>
   auto operator>= (SIMD<T,S> a, SIMD<T,S> b)
   { return SIMD<mask64,S>(a.lo()>=b.lo(), a.hi()>=b.hi()); }
@@ -302,7 +345,7 @@ inline SIMD<mask64, 1> operator==(const SIMD<int64_t, 1>& a, int64_t b) {
   
 
   
-/*        // ***************************** transpose 4x4 ********************************
+/****************************** transpose 4x4 ********************************
 
 void transpose (SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<double,4> a3,
                 SIMD<double,4> &b0, SIMD<double,4> &b1, SIMD<double,4> &b2, SIMD<double,4> &b3){
@@ -312,9 +355,7 @@ void transpose (SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<do
 *b0 = SIMD<double,4>(a0[2], a1[2], a2[2], a3[2]);
 *b0 = SIMD<double,4>(a0[3], a1[3], a2[3], a3[3]);
  
-
-
-             } */
+} */
 
 
 // *************** sincos ********************
@@ -334,18 +375,6 @@ inline SIMD<int64_t, N> simd_lround(const SIMD<double, N>& x) {
   return result;
 }
 
-template <int N>
-auto simd_sincos_reduced(const ASC_HPC::SIMD<double,N>& x)
-{
-    ASC_HPC::SIMD<double,N> s, c;
-    for (int i = 0; i < N; ++i) {
-        auto [si, ci] = ASC_HPC::sincos_reduced(x[i]);
-        s[i] = si;
-        c[i] = ci;
-    }
-    return std::tuple{s, c};
-}
-         
 
 
 static constexpr double sincof[] = {
@@ -381,6 +410,31 @@ auto sincos_reduced (T x)
   return std::tuple{ s, c };
 }
 
+template <int N>
+auto simd_sincos_reduced(const ASC_HPC::SIMD<double,N>& x)
+{
+    ASC_HPC::SIMD<double,N> s, c;
+    for (int i = 0; i < N; ++i) {
+        auto [si, ci] = ASC_HPC::sincos_reduced(x[i]);
+        s[i] = si;
+        c[i] = ci;
+    }
+    return std::tuple{s, c};
+}
+         
+
+template <int N>
+inline SIMD<mask64,N> make_bit_zero_mask(const SIMD<int64_t,N>& q, int bit)
+{
+  SIMD<mask64,N> m(mask64(false));  // alle false
+  for (int i = 0; i < N; ++i) {
+    bool is_zero = ( (q[i] & (int64_t(1) << bit)) == 0 );
+    m[i] = mask64(is_zero);
+  }
+  return m;
+}
+
+
 auto sincos (double x)
 {
   double y = round((2/M_PI) * x);
@@ -397,7 +451,28 @@ auto sincos (double x)
   return std::tuple{ s, c };
 }
 
+template <int N>
+auto sincos (SIMD<double,N> x)
+{
+  SIMD<double,N> y = simd_round((2/M_PI) * x);
+  SIMD<int64_t,N> q = simd_lround(y);
 
+  auto x_welle = x - (M_PI/2) * y;
+  auto [s1, c1] = simd_sincos_reduced(x_welle);
+
+  auto m_bit0_zero = make_bit_zero_mask<N>(q, 0);
+  auto m_bit1_zero = make_bit_zero_mask<N>(q, 1);
+
+  auto s2 = select(m_bit0_zero, s1,  c1);
+  auto s  = select(m_bit1_zero, s2, -s2);
+
+  auto c2 = select(m_bit0_zero, c1, -s1);
+  auto c  = select(m_bit1_zero, c2, -c2);
+
+  return std::tuple{s, c};
+}
+
+/*
 template <int N>
 auto sincos (SIMD<double,N> x)
 {
@@ -405,7 +480,8 @@ auto sincos (SIMD<double,N> x)
   SIMD<double,N> y = simd_round((2/M_PI) * x);
   SIMD<int64_t,N> q = simd_lround(y);
   
-  auto [s1,c1] = simd_sincos_reduced(x - y * (M_PI/2)); 
+  auto x_welle = x - (M_PI/2) * y;
+  auto [s1,c1] = simd_sincos_reduced(x_welle); 
 
   auto s2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), s1,  c1);
   auto s  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), s2, -s2);
@@ -414,9 +490,7 @@ auto sincos (SIMD<double,N> x)
   auto c  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), c2, -c2);
   
   return std::tuple{ s, c };
-}
-
-
+}*/
 
 
 }

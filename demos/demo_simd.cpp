@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <simd.hpp>
+#include "../src/simd.hpp"
 #include<math.h>
 
 #ifndef M_PI
@@ -76,7 +76,7 @@ int main()
   }
 
   cout << "select(mask, a, b) = " << select(mask, a,b) << endl;
-  cout << M_PI;
+  cout << M_PI << endl;
 
 //skalar
 
@@ -93,11 +93,11 @@ int main()
 
   {
     SIMD<double,4> angles(0.0, M_PI/2., M_PI, 3.0*M_PI/2.);
-    //auto [s, c] = sincos(angles);
-    //cout << "Test sincos(SIMD<double,4>):" << endl;
-    //cout << "angles = " << angles << endl;
-    //cout << "sin(angles) = " << s << endl;
-    //cout << "cos(angles) = " << c << endl;
+    auto [s, c] = sincos(angles);
+    cout << "Test sincos(SIMD<double,4>):" << endl;
+    cout << "angles = " << angles << endl;
+    cout << "sin(angles) = " << s << endl;
+    cout << "cos(angles) = " << c << endl;
   }
    
 }
