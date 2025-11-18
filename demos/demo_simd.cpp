@@ -1,7 +1,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "../src/simd.hpp"
+#include "C:\Users\victo\Documents\vivi\university\Semester5\ScientificComputing\Anfenger_new\HP_Anfenger\src\simd.hpp"
 #include<math.h>
 
 #ifndef M_PI
@@ -92,12 +92,12 @@ int main()
 //simd 
 
   {
-    // SIMD<double,4> angles(0.0, M_PI/2., M_PI, 3.0*M_PI/2.);
-    // auto [s, c] = sincos(angles);
-    // cout << "Test sincos(SIMD<double,4>):" << endl;
-    // cout << "angles = " << angles << endl;
-    // cout << "sin(angles) = " << s << endl;
-    // cout << "cos(angles) = " << c << endl;
+    SIMD<double,4> angles(0.0, M_PI/2., M_PI, 3.0*M_PI/2.);
+    auto [s, c] = sincos(angles);
+    cout << "Test sincos(SIMD<double,4>):" << endl;
+    cout << "angles = " << angles << endl;
+    cout << "sin(angles) = " << s << endl;
+    cout << "cos(angles) = " << c << endl;
   }
    
 }

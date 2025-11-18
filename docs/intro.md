@@ -1,4 +1,4 @@
-# Welcome to ASC-bla's documentation from Vici and Pia!
+# Welcome to High Performance Anfenger's documentation!
  Project made by 
  - Victoria K. (12307778)
  - Anna S.
