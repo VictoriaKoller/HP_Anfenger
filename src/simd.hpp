@@ -472,26 +472,26 @@ auto sincos (SIMD<double,N> x)
   return std::tuple{s, c};
 }
 
-/*
-template <int N>
-auto sincos (SIMD<double,N> x)
-{
+/////////////////
+// template <int N>
+// auto sincos (SIMD<double,N> x)
+// {
 
-  SIMD<double,N> y = simd_round((2/M_PI) * x);
-  SIMD<int64_t,N> q = simd_lround(y);
+//   SIMD<double,N> y = simd_round((2/M_PI) * x);
+//   SIMD<int64_t,N> q = simd_lround(y);
   
-  auto x_welle = x - (M_PI/2) * y;
-  auto [s1,c1] = simd_sincos_reduced(x_welle); 
+//   auto x_welle = x - (M_PI/2) * y;
+//   auto [s1,c1] = simd_sincos_reduced(x_welle); 
 
-  auto s2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), s1,  c1);
-  auto s  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), s2, -s2);
+//   auto s2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), s1,  c1);
+//   auto s  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), s2, -s2);
   
-  auto c2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), c1, -s1);
-  auto c  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), c2, -c2);
+//   auto c2 = select((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), c1, -s1);
+//   auto c  = select((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), c2, -c2);
   
-  return std::tuple{ s, c };
-}*/
-
+//   return std::tuple{ s, c };
+// }
+////////////7
 
 }
 #ifdef __AVX__
