@@ -5,4 +5,4 @@ Project by
 - Anna S.
 - Moritz S.
 - Victoria K.
-- Emanuel
+- Emanuel S.
