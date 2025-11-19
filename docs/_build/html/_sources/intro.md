@@ -1,5 +1,9 @@
-# Welcome to ASC-bla's documentation from Vici and Pia!
- Project made by Victoria Koller (12307778).
+# Welcome to High Performance Anfenger's documentation!
+ Project made by 
+ - Victoria K. (12307778)
+ - Anna S.
+ - Martin S.
+ - Emanuel
  
 ASC-bla is a C++ library for basic linear algebra operations.
 The library provides template classes **Vector** and **Matrix**.
