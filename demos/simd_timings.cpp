@@ -139,7 +139,7 @@ int main()
 
 
   cout << "timing daxpy 2x2" << endl;
-  for (size_t n = 16; n <= 1024; n*= 2)
+  for (size_t n = 16; n <= 512; n*= 2)
     {
       double * px0 = new double[n];
       double * py0 = new double[n];

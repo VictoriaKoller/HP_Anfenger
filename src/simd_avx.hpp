@@ -2,6 +2,7 @@
 #define SIMD_AVX_HPP
 
 #include <immintrin.h>
+#include <array>
 
 
 /*
@@ -27,10 +28,10 @@ namespace ASC_HPC
     
     SIMD<mask64, 1> lo() const { return SIMD<mask64,1>((*this)[0]); }
     SIMD<mask64, 1> hi() const { return SIMD<mask64,1>((*this)[1]); }
-    SIMD(double v0, double v1)
-    {(*this)[0] = v0; 
-      (*this)[1] = v1;
-    } 
+    SIMD(SIMD<mask64,1> lo, SIMD<mask64,1> hi) {
+      int64_t vals[2] = {lo[0] ? -1LL : 0LL, hi[0] ? -1LL : 0LL};
+      m_mask = _mm_loadu_si128((__m128i*)vals);
+    }
   };
  
 
@@ -42,11 +43,16 @@ namespace ASC_HPC
 
     SIMD (__m256i mask) : m_mask(mask) { };
     SIMD (__m256d mask) : m_mask(_mm256_castpd_si256(mask)) { ; }
+    SIMD(SIMD<mask64,2> lo, SIMD<mask64,2> hi) {
+      __m128i lo_i = lo.val();
+      __m128i hi_i = hi.val();
+      m_mask = _mm256_set_m128i(hi_i, lo_i);
+    }
     auto val() const { return m_mask; }
     mask64 operator[](size_t i) const { return ( (int64_t*)&m_mask)[i] != 0; }
     
-    SIMD<mask64, 2> lo() const { return SIMD<mask64,2>((*this)[0], (*this)[1]); }
-    SIMD<mask64, 2> hi() const { return SIMD<mask64,2>((*this)[2], (*this)[3]); }
+    SIMD<mask64, 2> lo() const { return SIMD<mask64,2>(SIMD<mask64,1>((*this)[0]), SIMD<mask64,1>((*this)[1])); }
+    SIMD<mask64, 2> hi() const { return SIMD<mask64,2>(SIMD<mask64,1>((*this)[2]), SIMD<mask64,1>((*this)[3])); }
   };
 
 
@@ -136,8 +142,26 @@ namespace ASC_HPC
     static constexpr int size() { return 4; }
     auto val() const { return m_val; }
     // const double * Ptr() const { return (double*)&val; }
-    // SIMD<double, 2> Lo() const { return _mm256_extractf128_pd(val, 0); }
-    // SIMD<double, 2> Hi() const { return _mm256_extractf128_pd(val, 1); }
+    SIMD<int64_t, 2> lo() const { 
+      int64_t vals[4]; 
+      _mm256_storeu_si256((__m256i*)vals, m_val); 
+      return SIMD<int64_t, 2>(vals[0], vals[1]); 
+    }
+    SIMD<int64_t, 2> hi() const { 
+      int64_t vals[4]; 
+      _mm256_storeu_si256((__m256i*)vals, m_val); 
+      return SIMD<int64_t, 2>(vals[2], vals[3]); 
+    }
+    SIMD<int64_t, 2> lo() { 
+      int64_t vals[4]; 
+      _mm256_storeu_si256((__m256i*)vals, m_val); 
+      return SIMD<int64_t, 2>(vals[0], vals[1]); 
+    }
+    SIMD<int64_t, 2> hi() { 
+      int64_t vals[4]; 
+      _mm256_storeu_si256((__m256i*)vals, m_val); 
+      return SIMD<int64_t, 2>(vals[2], vals[3]); 
+    }
     int64_t operator[](size_t i) const { return ((int64_t*)&m_val)[i]; }
   };
   
@@ -174,8 +198,6 @@ namespace ASC_HPC
   
 
   
-  
-
 
 
 // Transpose function: takes 4 rows as input, writes 4 columns as output
@@ -205,6 +227,68 @@ namespace ASC_HPC
     b3 = SIMD<double,4>(c3);
 
   }
+
+
+  // ---------------------- Min/Max operations ------------------------------
+  inline auto min(SIMD<double,4> a, SIMD<double,4> b) { 
+    return SIMD<double,4>(_mm256_min_pd(a.val(), b.val())); 
+  }
+
+  inline auto max(SIMD<double,4> a, SIMD<double,4> b) { 
+    return SIMD<double,4>(_mm256_max_pd(a.val(), b.val())); 
+  }
+
+  inline auto min(SIMD<double,2> a, SIMD<double,2> b) { 
+    return SIMD<double,2>(_mm_min_pd(a.val(), b.val())); 
+  }
+
+  inline auto max(SIMD<double,2> a, SIMD<double,2> b) { 
+    return SIMD<double,2>(_mm_max_pd(a.val(), b.val())); 
+  }
+
+  // ---------------------- Bitonic Sort for SIMD<double,4> -----------------
+  // Sorts 4 doubles in ascending order within a single SIMD register
+  inline SIMD<double,4> bitonic_sort(SIMD<double,4> v) {
+    __m256d x = v.val();
+    
+    // Step 1: Compare-swap pairs (0,1) and (2,3)
+    // Shuffle to get [1,0,3,2]
+    __m256d y = _mm256_shuffle_pd(x, x, 0b0101);
+    __m256d lo1 = _mm256_min_pd(x, y);
+    __m256d hi1 = _mm256_max_pd(x, y);
+    // Blend back: take min/max from correct positions
+    __m256d t1 = _mm256_blend_pd(lo1, hi1, 0b1010); // [min(0,1), max(0,1), min(2,3), max(2,3)]
+    
+    // Step 2: Compare-swap (0,3) and (1,2) - bitonic merge
+    // Permute 128-bit lanes and reverse within high lane: [0,1,3,2]
+    __m256d t2 = _mm256_permute2f128_pd(t1, t1, 0x01); // swap lanes -> [2,3,0,1]
+    t2 = _mm256_shuffle_pd(t2, t2, 0b0101);            // shuffle -> [3,2,1,0]
+    
+    __m256d lo2 = _mm256_min_pd(t1, t2);
+    __m256d hi2 = _mm256_max_pd(t1, t2);
+    __m256d t3 = _mm256_blend_pd(lo2, hi2, 0b1100); // [min, min, max, max]
+    
+    // Step 3: Final compare-swap on pairs
+    __m256d t4 = _mm256_shuffle_pd(t3, t3, 0b0101);
+    __m256d lo3 = _mm256_min_pd(t3, t4);
+    __m256d hi3 = _mm256_max_pd(t3, t4);
+    __m256d result = _mm256_blend_pd(lo3, hi3, 0b1010);
+    
+    return SIMD<double,4>(result);
+  }
+
+  // Bitonic sort for SIMD<double,2> - simple min/max swap
+  inline SIMD<double,2> bitonic_sort(SIMD<double,2> v) {
+    __m128d x = v.val();
+    __m128d y = _mm_shuffle_pd(x, x, 0b01); // swap [0,1] -> [1,0]
+    __m128d lo = _mm_min_pd(x, y);
+    __m128d hi = _mm_max_pd(x, y);
+    __m128d result = _mm_blend_pd(lo, hi, 0b10); // [min, max]
+    return SIMD<double,2>(result);
+  }
+
+  
+ 
 }
 
 

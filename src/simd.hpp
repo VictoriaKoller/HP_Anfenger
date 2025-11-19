@@ -105,6 +105,8 @@ namespace ASC_HPC
     static constexpr int size() { return S; }    
     auto & lo() { return m_lo; }
     auto & hi() { return m_hi; }
+    const auto & lo() const { return m_lo; }
+    const auto & hi() const { return m_hi; }
 
     const T * ptr() const { return m_lo.ptr(); }
     T * ptr() { return m_lo.ptr(); }          
@@ -359,20 +361,22 @@ void transpose (SIMD<double,4> a0, SIMD<double,4> a1, SIMD<double,4> a2, SIMD<do
 
 
 // *************** sincos ********************
-template <int N>
+template <size_t N>
 inline SIMD<double, N> simd_round(const SIMD<double, N>& x) {
-  SIMD<double, N> result;
-  for (int i = 0; i < N; ++i)
-    result[i] = std::round(x[i]);
-  return result;
+  if constexpr (N == 1) {
+    return SIMD<double, 1>(std::round(x[0]));
+  } else {
+    return SIMD<double, N>(simd_round(x.lo()), simd_round(x.hi()));
+  }
 }
 
-template <int N>
+template <size_t N>
 inline SIMD<int64_t, N> simd_lround(const SIMD<double, N>& x) {
-  SIMD<int64_t, N> result;
-  for (int i=0; i<N; ++i)
-    result[i] = std::lround(x[i]);
-  return result;
+  if constexpr (N == 1) {
+    return SIMD<int64_t, 1>(std::lround(x[0]));
+  } else {
+    return SIMD<int64_t, N>(simd_lround(x.lo()), simd_lround(x.hi()));
+  }
 }
 
 
@@ -410,28 +414,30 @@ auto sincos_reduced (T x)
   return std::tuple{ s, c };
 }
 
-template <int N>
+template <size_t N>
 auto simd_sincos_reduced(const ASC_HPC::SIMD<double,N>& x)
 {
-    ASC_HPC::SIMD<double,N> s, c;
-    for (int i = 0; i < N; ++i) {
-        auto [si, ci] = ASC_HPC::sincos_reduced(x[i]);
-        s[i] = si;
-        c[i] = ci;
+    if constexpr (N == 1) {
+        return ASC_HPC::sincos_reduced(x[0]);
+    } else {
+        auto [s_lo, c_lo] = simd_sincos_reduced(x.lo());
+        auto [s_hi, c_hi] = simd_sincos_reduced(x.hi());
+        return std::tuple{ASC_HPC::SIMD<double,N>(s_lo, s_hi), 
+                         ASC_HPC::SIMD<double,N>(c_lo, c_hi)};
     }
-    return std::tuple{s, c};
 }
          
 
-template <int N>
+template <size_t N>
 inline SIMD<mask64,N> make_bit_zero_mask(const SIMD<int64_t,N>& q, int bit)
 {
-  SIMD<mask64,N> m(mask64(false));  // alle false
-  for (int i = 0; i < N; ++i) {
-    bool is_zero = ( (q[i] & (int64_t(1) << bit)) == 0 );
-    m[i] = mask64(is_zero);
+  if constexpr (N == 1) {
+    bool is_zero = ( (q[0] & (int64_t(1) << bit)) == 0 );
+    return SIMD<mask64,1>(mask64(is_zero));
+  } else {
+    return SIMD<mask64,N>(make_bit_zero_mask(q.lo(), bit), 
+                          make_bit_zero_mask(q.hi(), bit));
   }
-  return m;
 }
 
 
@@ -451,7 +457,7 @@ auto sincos (double x)
   return std::tuple{ s, c };
 }
 
-template <int N>
+template <size_t N>
 auto sincos (SIMD<double,N> x)
 {
   SIMD<double,N> y = simd_round((2/M_PI) * x);
