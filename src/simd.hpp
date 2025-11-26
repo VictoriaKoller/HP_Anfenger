@@ -67,7 +67,7 @@ namespace ASC_HPC
   } // namespace detail
 
   
-  
+       
   template <typename T, size_t S>
   class SIMD
   {

@@ -14,6 +14,13 @@ int main()
   timeline = std::make_unique<TimeLine>("demo.trace");
 
   StartWorkers(3);
+
+int cnt = 0;
+RunParallel(1000, [&cnt] (int i, int size) { cnt++; });
+cout << "cnt = " << cnt << endl;
+
+
+
   
   RunParallel(10, [] (int i, int size)
   {
@@ -41,12 +48,12 @@ int main()
   
   RunParallel(100,  [] (int i, int size)
   {
-    static Timer t("one of 100", { 0, 0, 1});
+    static Timer t("one of 100", { 255,20,147});
     RegionTimer reg(t);
   });
 
   {
-    static Timer t("100x10 parallel runs", { 0, 0, 1});
+    static Timer t("100x10 parallel runs", { 255,20,147});
     RegionTimer reg(t);
 
     for (int k = 0; k < 100; k++)

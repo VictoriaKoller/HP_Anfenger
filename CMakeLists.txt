@@ -35,3 +35,7 @@ target_sources (simd_timings PUBLIC src/simd.hpp)
 add_executable (timing_mem demos/timing_mem.cpp)
 target_sources (timing_mem PUBLIC src/simd.hpp)
 
+# demo_lock
+add_executable (demo_lock demos/demo_lock.cpp 
+                src/taskmanager.cpp src/timer.cpp)
+target_sources (demo_lock PUBLIC src/lock_guard.hpp src/taskmanager.hpp src/timer.hpp)
