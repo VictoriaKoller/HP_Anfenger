@@ -11,7 +11,7 @@ using namespace ASC_HPC;
 using namespace std;
 
 
-auto SumIt (size_t n, SIMD<double,32> * data)
+auto SumIt(size_t n, SIMD<double,32> * data)
 {
   SIMD<double,32> sum(0.0);
   for (size_t i = 0; i < n; i++)
@@ -40,7 +40,7 @@ int main()
 {
   SIMD<double,32> sum(0.0);
 
-  if (false)
+  //if (false)
   for (size_t n = 1; n <= 5*1000*1000; n += 1+n/10)
     {
       SIMD<double,32> * data = new SIMD<double,32>[n];
@@ -53,9 +53,13 @@ int main()
       size_t runs = 1e10/mem+1;
 
       auto start = std::chrono::high_resolution_clock::now();
-      
+
+
       for (size_t i = 0; i < runs; i++)
-        sum += SumIt (n, data);
+        sum += SumIt(n, data);      
+
+      
+      cout << sum;
       
       auto end = std::chrono::high_resolution_clock::now();
 
@@ -70,7 +74,7 @@ int main()
 
       delete [] data;
     }
-
+    
 
   if (true)
   for (size_t n = 1; n <= 5*1000*1000; n += 1+n/10)

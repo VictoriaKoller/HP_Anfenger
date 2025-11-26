@@ -1,12 +1,19 @@
 #include <iostream>
 #include <sstream>
 
+#include "../src/simd.hpp"
+#include<math.h>
 
 #include <simd.hpp>
 #include <simd_avx.hpp>
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 using namespace ASC_HPC;
 using std::cout, std::endl;
+using ASC_HPC::operator<<;
+
 
 auto func1 (SIMD<double> a, SIMD<double> b)
 {
@@ -56,11 +63,8 @@ int main()
   cout << "a*b = " << a*b << endl;
   cout << "a+b = " << a+b << endl;
 
-
-
   cout << "HSum(a) = " << hSum(a) << endl;
   cout << "HSum(a,b) = " << hSum(a,b) << endl;
-
   
   auto sequ = IndexSequence<int64_t, 4>();
   cout << "sequ = " << sequ << endl;
@@ -74,6 +78,30 @@ int main()
   }
 
   cout << "select(mask, a, b) = " << select(mask, a,b) << endl;
+  cout << M_PI << endl;
+
+//skalar
+
+  {
+    double angle = M_PI/4;
+    auto [s, c] = sincos(angle);
+    cout << "Test sincos(double):" << endl;
+    cout << "angle = " << angle << endl;
+    cout << "sin(angle) = " << s << endl;
+    cout << "cos(angle) = " << c << endl;
+  }
+
+//simd 
+
+  {
+    SIMD<double,4> angles(0.0, M_PI/2., M_PI, 3.0*M_PI/2.);
+    auto [s, c] = sincos(angles);
+    cout << "Test sincos(SIMD<double,4>):" << endl;
+    cout << "angles = " << angles << endl;
+    cout << "sin(angles) = " << s << endl;
+    cout << "cos(angles) = " << c << endl;
+  }
+   
 
   cout << "\n--- Testing SIMD<double,2> ---" << endl;
   SIMD<double,2> x(5.0, 7.0);
